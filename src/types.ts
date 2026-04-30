@@ -75,3 +75,10 @@ export interface StoreData {
   listings: Listing[];
   bookings: BookingPayload[];
 }
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  role: string;
+  mustChangePassword: boolean;
+}
