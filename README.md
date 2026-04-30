@@ -86,3 +86,44 @@ Password is stored only as a bcrypt hash in the database. Change it immediately 
 5. Configure reverse proxy using `deploy/nginx.conf`.
 6. Install TLS cert with Let’s Encrypt (`certbot --nginx`).
 7. Configure automated PostgreSQL backups (daily, retention >= 7 days).
+
+## GitHub Auto-Deploy Pipeline (Hostinger)
+
+This repository now has:
+- `.github/workflows/ci.yml` for CI checks
+- `.github/workflows/deploy.yml` for automatic deploy on every push to `main`
+
+### 1) Required GitHub Secrets
+
+Set these in GitHub repo settings -> Secrets and variables -> Actions:
+
+- `SSH_HOST`: Hostinger VPS public IP or hostname
+- `SSH_USER`: SSH user (for example, `root` or a deploy user)
+- `SSH_PORT`: SSH port (usually `22`)
+- `SSH_PRIVATE_KEY`: private key content used by GitHub Actions
+- `APP_DIR`: absolute deploy directory on server (for example, `/opt/eden-backend-service`)
+- `APP_ENV_FILE`: full `.env` content for production
+
+### 2) First-time server prep
+
+```bash
+sudo apt update
+sudo apt install -y docker.io docker-compose-plugin git
+sudo systemctl enable docker
+sudo systemctl start docker
+```
+
+### 3) Deployment behavior
+
+On every push to `main`, GitHub Actions will:
+1. Run `typecheck`, `test`, and `build`
+2. SSH into Hostinger VPS
+3. Clone or update repo in `APP_DIR`
+4. Write `.env` from `APP_ENV_FILE` secret
+5. Run `docker compose up -d --build`
+
+### 4) Recommended next hardening
+
+- Move database migrations into deploy step (`npm run db:migrate`) using a one-off container or job container.
+- Add health-check and rollback script if `docker compose up` fails.
+- Use a least-privilege deploy user instead of root.

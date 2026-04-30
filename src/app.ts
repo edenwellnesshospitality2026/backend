@@ -8,7 +8,7 @@ import { errorHandler } from "./middlewares/error-handler.js";
 import { requireAuth, type AuthenticatedRequest } from "./middlewares/auth.js";
 import { validateBody } from "./middlewares/validate.js";
 import { bookingSchema } from "./modules/bookings/schema.js";
-import { createBooking } from "./modules/bookings/repository.js";
+import { createBooking, listBookings } from "./modules/bookings/repository.js";
 import { changePasswordSchema, loginSchema } from "./modules/auth/schema.js";
 import {
   authenticateUser,
@@ -147,6 +147,11 @@ export const createApp = () => {
 
     await createBooking(booking);
     return res.status(201).json({ data: booking });
+  });
+
+  app.get("/api/bookings", requireAuth, async (_req, res) => {
+    const bookings = await listBookings();
+    return res.json({ data: bookings });
   });
 
   app.use(errorHandler);
