@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mongoUriHasExplicitDatabase } from "./mongodb-uri.js";
+import { mongoUriHasExplicitDatabase } from "../config/mongodb-uri.js";
 
 describe("mongoUriHasExplicitDatabase", () => {
   it("returns true when path names a database", () => {
