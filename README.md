@@ -2,12 +2,12 @@
 
 Production-ready backend service for:
 - Authenticated operations panel APIs (custom JWT login with email/password)
-- Listings + rate plans + inventory management (MongoDB)
-- Bookings, contact/booking enquiries, CMS (memberships, guest stories, gallery), Cloudinary uploads
+- Listings + rate plans + inventory management (MySQL)
+- Bookings, contact/booking enquiries, CMS (memberships, guest stories, gallery), local disk uploads
 
 ## Stack
 - Node.js + Express + TypeScript
-- MongoDB (Mongoose)
+- MySQL (Prisma)
 - JWT auth (`jsonwebtoken`) + hashed passwords (`bcrypt`)
 - Validation (`zod`)
 - Security middleware (`helmet`, `express-rate-limit`)
@@ -18,7 +18,7 @@ Production-ready backend service for:
 
 ```bash
 cp .env.example .env
-# Set MONGODB_URI (with database name). Optionally CLOUDINARY_URL for image uploads.
+# Set DATABASE_URL (MySQL). Create schema: npx prisma migrate deploy
 npm install
 npm run db:seed
 npm run dev
@@ -31,14 +31,16 @@ Service runs on `http://localhost:8090`.
 - Email: `info@edenwellnesshospitality.com`
 - Initial password: `12345`
 
-Password is stored only as a bcrypt hash in MongoDB. Change it immediately from dashboard/API after first login.
+Password is stored only as a bcrypt hash in MySQL. Change it immediately from dashboard/API after first login.
 
 ## Environment Variables
 
 - `NODE_ENV` (`development` | `test` | `production`)
 - `PORT` (default `8090`)
-- `MONGODB_URI` (MongoDB connection string; include database name, e.g. `...mongodb.net/eden?...`)
-- `CLOUDINARY_URL` (optional; required for `POST /api/uploads/image`)
+- `DATABASE_URL` (MySQL connection string, e.g. `mysql://user:pass@host:3306/dbname`)
+- `UPLOAD_DIR` (upload root on disk, default `uploads`)
+- `FILES_PUBLIC_PREFIX` (URL path for static files, default `/files`)
+- `PUBLIC_SITE_URL` (optional; if set, upload API returns absolute `secureUrl` values)
 - `JWT_SECRET` (min 16 chars, strong random secret)
 - `JWT_EXPIRES_IN` (default `12h`)
 - `CORS_ORIGINS` (comma-separated allowed origins)
@@ -47,7 +49,8 @@ Password is stored only as a bcrypt hash in MongoDB. Change it immediately from 
 
 ## Database Commands
 
-- `npm run db:migrate`: informational only (MongoDB uses Mongoose models; no SQL migrations)
+- `npm run db:migrate`: run `prisma migrate deploy` (apply SQL migrations to `DATABASE_URL`)
+- `npm run db:push`: `prisma db push` (dev schema sync; avoid in production if you use migrations)
 - `npm run db:seed`: upserts default admin user and seeds membership tiers if empty
 
 ## API Endpoints
@@ -108,7 +111,7 @@ Password is stored only as a bcrypt hash in MongoDB. Change it immediately from 
    - `docker compose up -d --build`
 5. Configure reverse proxy using `deploy/nginx.conf`.
 6. Install TLS cert with Let’s Encrypt (`certbot --nginx`).
-7. Configure automated MongoDB Atlas backups (or self-hosted backups).
+7. Configure automated MySQL backups (hosting provider or `mysqldump` schedule).
 
 ## GitHub Auto-Deploy Pipeline (Hostinger)
 

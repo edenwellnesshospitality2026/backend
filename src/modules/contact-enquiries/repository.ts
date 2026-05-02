@@ -1,30 +1,58 @@
-import { ContactEnquiryModel } from "../../models/ContactEnquiry.js";
+import type { EnquiryStatus } from "@prisma/client";
+import { prisma } from "../../db/prisma.js";
 import type { CreateInput, EnquiryDocument } from "./types.js";
 
 export const createContactEnquiry = async (input: CreateInput) => {
-  return ContactEnquiryModel.create(input);
+  return prisma.contactEnquiry.create({
+    data: {
+      name: input.name,
+      email: input.email,
+      phone: input.phone,
+      bookingType: input.bookingType ?? null,
+      message: input.message ?? null,
+      sourceUrl: input.sourceUrl ?? null,
+    },
+  });
 };
+
+const mapRow = (d: {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  bookingType: string | null;
+  message: string | null;
+  sourceUrl: string | null;
+  status: EnquiryStatus;
+  createdAt: Date;
+}): EnquiryDocument => ({
+  id: d.id,
+  name: d.name,
+  email: d.email,
+  phone: d.phone,
+  bookingType: d.bookingType ?? undefined,
+  message: d.message ?? undefined,
+  sourceUrl: d.sourceUrl ?? undefined,
+  status: d.status,
+  createdAt: d.createdAt,
+});
 
 export const listContactEnquiries = async (): Promise<EnquiryDocument[]> => {
-  const docs = await ContactEnquiryModel.find().sort({ createdAt: -1 }).lean();
-  return docs.map((d) => ({
-    id: String(d._id),
-    name: d.name,
-    email: d.email,
-    phone: d.phone,
-    bookingType: d.bookingType,
-    message: d.message,
-    sourceUrl: d.sourceUrl,
-    status: d.status,
-    createdAt: d.createdAt,
-  }));
+  const rows = await prisma.contactEnquiry.findMany({ orderBy: { createdAt: "desc" } });
+  return rows.map(mapRow);
 };
 
-export const updateContactEnquiryStatus = async (id: string, status: "new" | "contacted" | "closed") => {
-  const doc = await ContactEnquiryModel.findByIdAndUpdate(
-    id,
-    { $set: { status } },
-    { new: true }
-  ).lean();
-  return doc;
+export const updateContactEnquiryStatus = async (
+  id: string,
+  status: "new" | "contacted" | "closed"
+) => {
+  try {
+    const doc = await prisma.contactEnquiry.update({
+      where: { id },
+      data: { status: status as EnquiryStatus },
+    });
+    return mapRow(doc);
+  } catch {
+    return null;
+  }
 };

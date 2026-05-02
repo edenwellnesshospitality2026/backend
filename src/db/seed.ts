@@ -1,9 +1,6 @@
 import bcrypt from "bcrypt";
 import "dotenv/config";
-import mongoose from "mongoose";
-import { env } from "../config/env.js";
-import { UserModel } from "../models/User.js";
-import { MembershipTierModel } from "../models/MembershipTier.js";
+import { prisma } from "./prisma.js";
 
 const adminEmail = "info@edenwellnesshospitality.com";
 const adminPassword = "12345";
@@ -49,35 +46,49 @@ const defaultMembershipTiers = [
 ];
 
 const run = async () => {
-  await mongoose.connect(env.MONGODB_URI);
+  await prisma.$connect();
 
   const passwordHash = await bcrypt.hash(adminPassword, 12);
-  await UserModel.findOneAndUpdate(
-    { email: adminEmail.toLowerCase() },
-    {
+  await prisma.user.upsert({
+    where: { email: adminEmail.toLowerCase() },
+    create: {
       email: adminEmail.toLowerCase(),
       passwordHash,
       role: "admin",
       mustChangePassword: false,
     },
-    { upsert: true, new: true }
-  );
+    update: {
+      passwordHash,
+      role: "admin",
+      mustChangePassword: false,
+    },
+  });
   // eslint-disable-next-line no-console
   console.log(`Seeded admin user: ${adminEmail}`);
 
-  const count = await MembershipTierModel.countDocuments();
+  const count = await prisma.membershipTier.count();
   if (count === 0) {
-    await MembershipTierModel.insertMany(defaultMembershipTiers);
+    await prisma.membershipTier.createMany({
+      data: defaultMembershipTiers.map((t) => ({
+        title: t.title,
+        description: t.description,
+        priceLabel: t.priceLabel,
+        features: t.features,
+        isPopular: t.isPopular,
+        sortOrder: t.sortOrder,
+        published: t.published,
+      })),
+    });
     // eslint-disable-next-line no-console
     console.log("Seeded default membership tiers");
   }
 
-  await mongoose.disconnect();
+  await prisma.$disconnect();
 };
 
 run().catch(async (error) => {
   // eslint-disable-next-line no-console
   console.error(error);
-  await mongoose.disconnect().catch(() => undefined);
+  await prisma.$disconnect().catch(() => undefined);
   process.exit(1);
 });
