@@ -21,6 +21,10 @@ const roomShowcaseSchema = new Schema(
     published: { type: Boolean, default: true },
     bookHref: { type: String, default: "/booking" },
     startingPrice: { type: Number },
+    /** Optional nightly rates (₹, excl. taxes). When unset, booking derives CP/MAP from EP formulas. */
+    rateEp: { type: Number },
+    rateCp: { type: Number },
+    rateMap: { type: Number },
     showPricing: { type: Boolean, default: false },
   },
   { timestamps: true }

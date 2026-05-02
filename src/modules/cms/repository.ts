@@ -120,12 +120,29 @@ export const listRoomCardsAdmin = async () => {
   return RoomShowcaseModel.find().sort({ sortOrder: 1 }).lean();
 };
 
+const RATE_KEYS = ["rateEp", "rateCp", "rateMap"] as const;
+
 export const createRoomCard = async (body: Record<string, unknown>) => {
-  return RoomShowcaseModel.create(body);
+  const cleaned = { ...body };
+  for (const k of RATE_KEYS) {
+    if (cleaned[k] === null) delete cleaned[k];
+  }
+  return RoomShowcaseModel.create(cleaned);
 };
 
 export const updateRoomCard = async (id: string, body: Record<string, unknown>) => {
-  return RoomShowcaseModel.findByIdAndUpdate(id, { $set: body }, { returnDocument: "after" }).lean();
+  const set: Record<string, unknown> = { ...body };
+  const unset: Record<string, 1> = {};
+  for (const k of RATE_KEYS) {
+    if (set[k] === null) {
+      unset[k] = 1;
+      delete set[k];
+    }
+  }
+  const update: mongoose.UpdateQuery = {};
+  if (Object.keys(set).length) update.$set = set;
+  if (Object.keys(unset).length) update.$unset = unset;
+  return RoomShowcaseModel.findByIdAndUpdate(id, update, { returnDocument: "after" }).lean();
 };
 
 export const deleteRoomCard = async (id: string) => {
@@ -157,9 +174,20 @@ export const upsertPresidentialSuite = async (body: Record<string, unknown>) => 
   };
   if (typeof body.sizeLabel === "string") patch.sizeLabel = body.sizeLabel;
   if (typeof body.startingPrice === "number") patch.startingPrice = body.startingPrice;
+
+  const unset: Record<string, 1> = {};
+  for (const k of RATE_KEYS) {
+    const v = body[k];
+    if (v === null) unset[k] = 1;
+    else if (typeof v === "number") (patch as Record<string, unknown>)[k] = v;
+  }
+
+  const update: mongoose.UpdateQuery = { $set: patch };
+  if (Object.keys(unset).length) update.$unset = unset;
+
   return PresidentialSuiteModel.findOneAndUpdate(
     { key: PRESIDENTIAL_KEY },
-    { $set: patch },
+    update,
     { returnDocument: "after", upsert: true, setDefaultsOnInsert: true }
   ).lean();
 };

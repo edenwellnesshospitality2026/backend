@@ -38,6 +38,33 @@ describe("roomCardShowcaseBodySchema", () => {
       })
     ).toThrow();
   });
+
+  it("accepts optional EP/CP/MAP nightly rates", () => {
+    const parsed = roomCardShowcaseBodySchema.parse({
+      slug: "eden-haven",
+      headline: "Eden Haven",
+      description: "Studio",
+      images: [],
+      rateEp: 7500,
+      rateCp: 8025,
+      rateMap: 9000,
+    });
+    expect(parsed.rateEp).toBe(7500);
+    expect(parsed.rateMap).toBe(9000);
+  });
+
+  it("accepts null rate fields to clear overrides", () => {
+    const parsed = roomCardShowcaseBodySchema.parse({
+      slug: "eden-haven",
+      headline: "Eden Haven",
+      description: "Studio",
+      images: [],
+      rateEp: null,
+      rateCp: null,
+      rateMap: null,
+    });
+    expect(parsed.rateEp).toBeNull();
+  });
 });
 
 describe("presidentialSuiteBodySchema", () => {
@@ -49,6 +76,28 @@ describe("presidentialSuiteBodySchema", () => {
       images: [],
     });
     expect(parsed.headline).toBe("Presidential Suite");
+  });
+
+  it("accepts optional rateEp rateCp rateMap", () => {
+    const parsed = presidentialSuiteBodySchema.parse({
+      headline: "Presidential Suite",
+      description: "Flagship",
+      images: [],
+      rateEp: 35000,
+      rateCp: 35525,
+      rateMap: 36500,
+    });
+    expect(parsed.rateCp).toBe(35525);
+  });
+
+  it("accepts null to clear stored rates", () => {
+    const parsed = presidentialSuiteBodySchema.parse({
+      headline: "Presidential Suite",
+      description: "Flagship",
+      images: [],
+      rateMap: null,
+    });
+    expect(parsed.rateMap).toBeNull();
   });
 });
 

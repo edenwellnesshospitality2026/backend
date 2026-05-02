@@ -115,6 +115,9 @@ const defaultPresidentialSuite = {
   bookHref: "/booking",
   bookButtonLabel: "Book Now",
   startingPrice: 35000,
+  rateEp: 35000,
+  rateCp: 35525,
+  rateMap: 36500,
   showPricing: false,
   images: [
     {
@@ -155,6 +158,9 @@ const defaultRoomCards = [
     published: true,
     bookHref: "/booking",
     startingPrice: 7500,
+    rateEp: 7500,
+    rateCp: 8025,
+    rateMap: 9000,
     showPricing: false,
     images: [
       {
@@ -186,6 +192,9 @@ const defaultRoomCards = [
     published: true,
     bookHref: "/booking",
     startingPrice: 10000,
+    rateEp: 10000,
+    rateCp: 10525,
+    rateMap: 11500,
     showPricing: false,
     images: [
       {
@@ -217,6 +226,9 @@ const defaultRoomCards = [
     published: true,
     bookHref: "/booking",
     startingPrice: 15000,
+    rateEp: 15000,
+    rateCp: 15525,
+    rateMap: 16500,
     showPricing: false,
     images: [
       {

@@ -57,6 +57,10 @@ export const roomCardShowcaseBodySchema = z.object({
   published: z.boolean().optional(),
   bookHref: z.string().optional(),
   startingPrice: z.number().optional(),
+  /** Omit or number for create; use `null` on update to clear stored override (fallback to formulas). */
+  rateEp: z.union([z.number().nonnegative(), z.null()]).optional(),
+  rateCp: z.union([z.number().nonnegative(), z.null()]).optional(),
+  rateMap: z.union([z.number().nonnegative(), z.null()]).optional(),
   showPricing: z.boolean().optional(),
 });
 
@@ -70,6 +74,9 @@ export const presidentialSuiteBodySchema = z.object({
   bookHref: z.string().optional(),
   bookButtonLabel: z.string().optional(),
   startingPrice: z.number().optional(),
+  rateEp: z.union([z.number().nonnegative(), z.null()]).optional(),
+  rateCp: z.union([z.number().nonnegative(), z.null()]).optional(),
+  rateMap: z.union([z.number().nonnegative(), z.null()]).optional(),
   showPricing: z.boolean().optional(),
 });
 

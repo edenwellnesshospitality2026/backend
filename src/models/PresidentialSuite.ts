@@ -21,6 +21,9 @@ const presidentialSuiteSchema = new Schema(
     bookHref: { type: String, default: "/booking" },
     bookButtonLabel: { type: String, default: "Book Now" },
     startingPrice: { type: Number },
+    rateEp: { type: Number },
+    rateCp: { type: Number },
+    rateMap: { type: Number },
     showPricing: { type: Boolean, default: false },
   },
   { timestamps: true }
