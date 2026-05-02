@@ -24,4 +24,8 @@ export const bookingSchema = z.object({
   bookingSource: z.string().optional(),
   notes: z.string().optional(),
   internalRemarks: z.string().optional(),
+  /** e.g. "EP×1 @ ₹7,500/night · 2 nights" */
+  ratePlanSummary: z.string().optional(),
+  /** Room route id: studio, 1bhk, 2bhk, presidential */
+  listingSlug: z.string().optional(),
 });

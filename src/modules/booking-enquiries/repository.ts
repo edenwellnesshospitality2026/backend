@@ -14,6 +14,7 @@ export const listBookingEnquiries = async (): Promise<EnquiryDocument[]> => {
     phone: d.phone,
     guests: d.guests,
     checkIn: d.checkIn,
+    checkOut: d.checkOut,
     listingSlug: d.listingSlug,
     roomName: d.roomName,
     ratePlanSummary: d.ratePlanSummary,

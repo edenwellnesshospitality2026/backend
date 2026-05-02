@@ -6,6 +6,7 @@ export const createBookingEnquirySchema = z.object({
   phone: z.string().min(6),
   guests: z.number().int().positive(),
   checkIn: z.string().optional(),
+  checkOut: z.string().optional(),
   listingSlug: z.string().optional(),
   roomName: z.string().optional(),
   ratePlanSummary: z.string().optional(),

@@ -31,6 +31,8 @@ export interface BookingPayload {
   bookingSource?: string;
   notes?: string;
   internalRemarks?: string;
+  ratePlanSummary?: string;
+  listingSlug?: string;
 }
 
 export interface RatePlan {

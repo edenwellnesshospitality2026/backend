@@ -7,6 +7,7 @@ const bookingEnquirySchema = new Schema(
     phone: { type: String, required: true },
     guests: { type: Number, required: true },
     checkIn: { type: String },
+    checkOut: { type: String },
     listingSlug: { type: String },
     roomName: { type: String },
     ratePlanSummary: { type: String },

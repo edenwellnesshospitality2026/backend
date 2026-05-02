@@ -31,6 +31,8 @@ const bookingSchema = new Schema(
     bookingSource: { type: String, default: "website" },
     notes: { type: String },
     internalRemarks: { type: String },
+    ratePlanSummary: { type: String },
+    listingSlug: { type: String },
   },
   { timestamps: true }
 );

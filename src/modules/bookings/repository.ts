@@ -25,6 +25,8 @@ export const createBooking = async (booking: BookingPayload) => {
     bookingSource: booking.bookingSource ?? "website",
     notes: booking.notes,
     internalRemarks: booking.internalRemarks,
+    ratePlanSummary: booking.ratePlanSummary,
+    listingSlug: booking.listingSlug,
   });
   return { ...booking, bookingId };
 };
@@ -53,5 +55,7 @@ export const listBookings = async (): Promise<BookingPayload[]> => {
     bookingSource: row.bookingSource,
     notes: row.notes ?? undefined,
     internalRemarks: row.internalRemarks ?? undefined,
+    ratePlanSummary: row.ratePlanSummary ?? undefined,
+    listingSlug: row.listingSlug ?? undefined,
   }));
 };

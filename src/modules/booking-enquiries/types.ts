@@ -4,6 +4,7 @@ export interface CreateInput {
   phone: string;
   guests: number;
   checkIn?: string;
+  checkOut?: string;
   listingSlug?: string;
   roomName?: string;
   ratePlanSummary?: string;
@@ -19,6 +20,7 @@ export interface EnquiryDocument {
   phone: string;
   guests: number;
   checkIn?: string;
+  checkOut?: string;
   listingSlug?: string;
   roomName?: string;
   ratePlanSummary?: string;
