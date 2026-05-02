@@ -23,7 +23,11 @@ const envSchema = z.object({
   PORT: portSchema,
   MONGODB_URI: z.string().url(),
   CLOUDINARY_URL: z.string().optional(),
-  CORS_ORIGINS: z.string().default("http://localhost:8080,http://localhost:8081"),
+  CORS_ORIGINS: z
+    .string()
+    .default(
+      "http://localhost:8080,http://localhost:8081,http://localhost:8082,http://localhost:5173"
+    ),
   JWT_SECRET: z.string().min(16, "JWT_SECRET must be at least 16 chars."),
   JWT_EXPIRES_IN: z.string().default("12h"),
   AUTH_RATE_LIMIT_WINDOW_MS: z.coerce.number().default(15 * 60 * 1000),
