@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { createApp } from "./app.js";
 import { env } from "./config/env.js";
+import { mongoUriHasExplicitDatabase } from "./config/mongodb-uri.js";
 import { logger } from "./config/logger.js";
 import { connectMongo, disconnectMongo } from "./db/mongo.js";
 
@@ -19,6 +20,12 @@ const runMongoConnectionLoop = async () => {
 };
 
 const start = async () => {
+  if (!mongoUriHasExplicitDatabase(env.MONGODB_URI)) {
+    logger.warn(
+      "MONGODB_URI has no database name in the path (e.g. use ...mongodb.net/eden?retryWrites=...); Mongoose may use the default database."
+    );
+  }
+
   const app = createApp();
 
   const server = app.listen(env.PORT, env.HOST, () => {

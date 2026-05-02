@@ -33,11 +33,13 @@ Service runs on `http://localhost:8090`.
 
 Password is stored only as a bcrypt hash in MongoDB. Change it immediately from dashboard/API after first login.
 
+**Production:** See [DEPLOY.md](./DEPLOY.md) for secret rotation, Atlas + Cloudinary env, smoke tests, and post-deploy steps (seed DB, change admin password).
+
 ## Environment Variables
 
 - `NODE_ENV` (`development` | `test` | `production`)
 - `PORT` (default `8090`)
-- `MONGODB_URI` (MongoDB connection string; include database name, e.g. `...mongodb.net/eden?...`)
+- `MONGODB_URI` (MongoDB connection string; **include database name** in the path, e.g. `...mongodb.net/eden?...` — the server warns at startup if the path has no DB segment)
 - `CLOUDINARY_URL` (optional; required for `POST /api/uploads/image`)
 - `JWT_SECRET` (min 16 chars, strong random secret)
 - `JWT_EXPIRES_IN` (default `12h`)
