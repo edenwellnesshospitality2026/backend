@@ -75,3 +75,15 @@ CI on every PR/push: `npm run typecheck`, `npm run test`, `npm run build` (uses 
    ```
 
 4. Log in and **change the default admin password** via `POST /api/auth/change-password`.
+
+## 7. Hostinger hPanel: build “Completed” but `/health` returns 503
+
+The build log often stops right after the `tsc` line with **no extra output** — that is normal when compilation succeeds. **`503 Service Unavailable`** means the browser reached Hostinger’s edge but **no healthy Node process** answered (not “Mongo slow” by itself).
+
+Do this in order:
+
+1. **Runtime logs** (hPanel → **Runtime logs** for this site) — look for `Invalid environment variables`, stack traces, or `Cannot find module`. Fix env or redeploy; the process exits **before** `listen()` if validation fails.
+2. **`MONGODB_URI`** — Must be a valid URL for Zod (`mongodb+srv://...`). If the Atlas password contains **`@`, `#`, `%`, `/`**, etc., it must be [**percent-encoded**](https://www.mongodb.com/docs/manual/reference/connection-string/) in the URI.
+3. **`HOST` / `PORT`** — Add **`HOST=0.0.0.0`** in Environment variables if missing. Set **`PORT`** to whatever Hostinger documents for Node apps on your plan (they sometimes inject `PORT` automatically; if the app and proxy disagree, you get **503**).
+4. **Fresh zip** — After fixing code on GitHub, rebuild your deploy zip from the latest `main` (or run `npm run package:hostinger` from [scripts/package-hostinger.sh](scripts/package-hostinger.sh)), upload again, and **redeploy** so the server is not still running an old failed state.
+5. **Atlas network** — If the app did start, `/health` can still show `mongoConnected: false` until Atlas allows the server IP; that is **200 JSON**, not 503. **503** almost always means the Node app never bound to the port the proxy uses.

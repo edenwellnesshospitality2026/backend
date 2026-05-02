@@ -1,5 +1,15 @@
 import { z } from "zod";
 
+/** hPanel / GitHub env values sometimes include accidental leading or trailing whitespace. */
+const trimEnvStrings = (env: NodeJS.ProcessEnv): Record<string, string | undefined> => {
+  const out: Record<string, string | undefined> = {};
+  for (const key of Object.keys(env)) {
+    const v = env[key];
+    out[key] = typeof v === "string" ? v.trim() : v;
+  }
+  return out;
+};
+
 /** PORT must match what the hosting reverse-proxy forwards to (Hostinger often injects PORT; if not, set it in the panel). */
 const portSchema = z.preprocess((v) => {
   if (v == null || v === "") return 8090;
@@ -20,10 +30,11 @@ const envSchema = z.object({
   AUTH_RATE_LIMIT_MAX: z.coerce.number().default(20),
 });
 
-const parsed = envSchema.safeParse(process.env);
+const parsed = envSchema.safeParse(trimEnvStrings(process.env));
 
 if (!parsed.success) {
-  throw new Error(`Invalid environment variables: ${parsed.error.message}`);
+  const detail = parsed.error.flatten().fieldErrors;
+  throw new Error(`Invalid environment variables: ${JSON.stringify(detail)}`);
 }
 
 export const env = parsed.data;
