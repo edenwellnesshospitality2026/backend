@@ -39,3 +39,44 @@ export const galleryImageBodySchema = z.object({
   sortOrder: z.number().int().optional(),
   published: z.boolean().optional(),
 });
+
+const showcaseImageSchema = z.object({
+  secureUrl: z.string().url(),
+  publicId: z.string().min(1),
+  alt: z.string().optional(),
+});
+
+/** Pick Your Room / Suite grid cards (Eden Haven, Residence, Grand). */
+export const roomCardShowcaseBodySchema = z.object({
+  slug: z.string().min(1),
+  headline: z.string().min(1),
+  description: z.string().min(1),
+  sizeLabel: z.string().optional(),
+  images: z.array(showcaseImageSchema).default([]),
+  sortOrder: z.number().int().optional(),
+  published: z.boolean().optional(),
+  bookHref: z.string().optional(),
+  startingPrice: z.number().optional(),
+  showPricing: z.boolean().optional(),
+});
+
+/** Singleton Presidential Suite marketing section (separate from room cards). */
+export const presidentialSuiteBodySchema = z.object({
+  headline: z.string().min(1),
+  description: z.string().min(1),
+  sizeLabel: z.string().optional(),
+  images: z.array(showcaseImageSchema).default([]),
+  published: z.boolean().optional(),
+  bookHref: z.string().optional(),
+  bookButtonLabel: z.string().optional(),
+  startingPrice: z.number().optional(),
+  showPricing: z.boolean().optional(),
+});
+
+export const siteContentBodySchema = z.object({
+  key: z.string().min(1),
+  pickYourRoomTitle: z.string().optional(),
+  pickYourRoomIntro: z.string().optional(),
+  membershipIntro: z.string().optional(),
+  guestStoriesIntro: z.string().optional(),
+});

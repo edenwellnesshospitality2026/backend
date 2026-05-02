@@ -29,5 +29,5 @@ export const updateBookingEnquiryStatus = async (
   id: string,
   status: "new" | "contacted" | "closed"
 ) => {
-  return BookingEnquiryModel.findByIdAndUpdate(id, { $set: { status } }, { new: true }).lean();
+  return BookingEnquiryModel.findByIdAndUpdate(id, { $set: { status } }, { returnDocument: "after" }).lean();
 };

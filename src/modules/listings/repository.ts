@@ -92,7 +92,7 @@ export const upsertListing = async (listing: Listing): Promise<Listing> => {
         totalInventory: rp.totalInventory,
       })),
     },
-    { upsert: true, new: true, setDefaultsOnInsert: true }
+    { upsert: true, returnDocument: "after", setDefaultsOnInsert: true }
   );
   const saved = await getListingById(listing.id);
   if (!saved) throw new Error("Failed to persist listing");

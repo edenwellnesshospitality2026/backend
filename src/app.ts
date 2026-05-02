@@ -46,6 +46,9 @@ import {
   galleryImageBodySchema,
   guestStoryBodySchema,
   membershipTierBodySchema,
+  presidentialSuiteBodySchema,
+  roomCardShowcaseBodySchema,
+  siteContentBodySchema,
 } from "./modules/cms/schemas.js";
 import * as cms from "./modules/cms/repository.js";
 import { uploadMemory } from "./lib/upload.js";
@@ -392,6 +395,94 @@ export const createApp = () => {
     await cms.deleteGalleryImage(String(req.params.id));
     res.status(204).send();
   });
+
+  app.get("/api/cms/presidential-suite", async (_req, res) => {
+    const doc = await cms.getPresidentialSuitePublic();
+    return res.json({ data: doc });
+  });
+
+  app.get("/api/cms/presidential-suite/manage", requireAuth, async (_req, res) => {
+    const doc = await cms.getPresidentialSuiteAdmin();
+    return res.json({ data: doc });
+  });
+
+  app.put(
+    "/api/cms/presidential-suite",
+    requireAuth,
+    validateBody(presidentialSuiteBodySchema),
+    async (req, res) => {
+      const doc = await cms.upsertPresidentialSuite(req.body as Record<string, unknown>);
+      return res.json({ data: doc });
+    }
+  );
+
+  app.get("/api/cms/room-cards", async (_req, res) => {
+    const rows = await cms.listRoomCardsPublic();
+    return res.json({ data: rows });
+  });
+
+  app.get("/api/cms/room-cards/manage", requireAuth, async (_req, res) => {
+    const rows = await cms.listRoomCardsAdmin();
+    return res.json({ data: rows });
+  });
+
+  app.post(
+    "/api/cms/room-cards",
+    requireAuth,
+    validateBody(roomCardShowcaseBodySchema),
+    async (req, res) => {
+      const doc = await cms.createRoomCard(req.body as Record<string, unknown>);
+      return res.status(201).json({ data: doc });
+    }
+  );
+
+  app.put(
+    "/api/cms/room-cards/:id",
+    requireAuth,
+    validateBody(roomCardShowcaseBodySchema),
+    async (req, res) => {
+      const doc = await cms.updateRoomCard(String(req.params.id), req.body as Record<string, unknown>);
+      if (!doc) return res.status(404).json({ error: "Not found" });
+      return res.json({ data: doc });
+    }
+  );
+
+  app.delete("/api/cms/room-cards/:id", requireAuth, async (req, res) => {
+    await cms.deleteRoomCard(String(req.params.id));
+    res.status(204).send();
+  });
+
+  app.get("/api/cms/site-content", async (req, res) => {
+    const key = typeof req.query.key === "string" && req.query.key ? req.query.key : "homepage";
+    const doc = await cms.getSiteContentByKey(key);
+    return res.json({
+      data:
+        doc ??
+        ({
+          key,
+          pickYourRoomTitle: "",
+          pickYourRoomIntro: "",
+          membershipIntro: "",
+          guestStoriesIntro: "",
+        } as const),
+    });
+  });
+
+  app.get("/api/cms/site-content/manage", requireAuth, async (req, res) => {
+    const key = typeof req.query.key === "string" && req.query.key ? req.query.key : "homepage";
+    const doc = await cms.getSiteContentByKey(key);
+    return res.json({ data: doc });
+  });
+
+  app.put(
+    "/api/cms/site-content",
+    requireAuth,
+    validateBody(siteContentBodySchema),
+    async (req, res) => {
+      const doc = await cms.upsertSiteContent(req.body as Record<string, unknown>);
+      return res.json({ data: doc });
+    }
+  );
 
   app.post(
     "/api/uploads/image",

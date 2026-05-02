@@ -24,7 +24,7 @@ export const updateContactEnquiryStatus = async (id: string, status: "new" | "co
   const doc = await ContactEnquiryModel.findByIdAndUpdate(
     id,
     { $set: { status } },
-    { new: true }
+    { returnDocument: "after" }
   ).lean();
   return doc;
 };

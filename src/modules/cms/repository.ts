@@ -3,6 +3,11 @@ import { GalleryCategoryModel } from "../../models/GalleryCategory.js";
 import { GalleryImageModel } from "../../models/GalleryImage.js";
 import { GuestStoryModel } from "../../models/GuestStory.js";
 import { MembershipTierModel } from "../../models/MembershipTier.js";
+import { PresidentialSuiteModel } from "../../models/PresidentialSuite.js";
+import { RoomShowcaseModel } from "../../models/RoomShowcase.js";
+import { SiteContentModel } from "../../models/SiteContent.js";
+
+const PRESIDENTIAL_KEY = "default";
 
 export const listMembershipTiersPublic = async () => {
   return MembershipTierModel.find({ published: true }).sort({ sortOrder: 1 }).lean();
@@ -17,7 +22,7 @@ export const createMembershipTier = async (body: Record<string, unknown>) => {
 };
 
 export const updateMembershipTier = async (id: string, body: Record<string, unknown>) => {
-  return MembershipTierModel.findByIdAndUpdate(id, { $set: body }, { new: true }).lean();
+  return MembershipTierModel.findByIdAndUpdate(id, { $set: body }, { returnDocument: "after" }).lean();
 };
 
 export const deleteMembershipTier = async (id: string) => {
@@ -37,7 +42,7 @@ export const createGuestStory = async (body: Record<string, unknown>) => {
 };
 
 export const updateGuestStory = async (id: string, body: Record<string, unknown>) => {
-  return GuestStoryModel.findByIdAndUpdate(id, { $set: body }, { new: true }).lean();
+  return GuestStoryModel.findByIdAndUpdate(id, { $set: body }, { returnDocument: "after" }).lean();
 };
 
 export const deleteGuestStory = async (id: string) => {
@@ -74,7 +79,7 @@ export const createGalleryCategory = async (body: Record<string, unknown>) => {
 };
 
 export const updateGalleryCategory = async (id: string, body: Record<string, unknown>) => {
-  return GalleryCategoryModel.findByIdAndUpdate(id, { $set: body }, { new: true }).lean();
+  return GalleryCategoryModel.findByIdAndUpdate(id, { $set: body }, { returnDocument: "after" }).lean();
 };
 
 export const deleteGalleryCategory = async (id: string) => {
@@ -99,9 +104,91 @@ export const updateGalleryImage = async (id: string, body: Record<string, unknow
   if (typeof body.categoryId === "string") {
     (patch as Record<string, unknown>).categoryId = new mongoose.Types.ObjectId(body.categoryId);
   }
-  return GalleryImageModel.findByIdAndUpdate(id, { $set: patch }, { new: true }).lean();
+  return GalleryImageModel.findByIdAndUpdate(id, { $set: patch }, { returnDocument: "after" }).lean();
 };
 
 export const deleteGalleryImage = async (id: string) => {
   await GalleryImageModel.findByIdAndDelete(id);
+};
+
+/** Pick Your Room / Suite — grid cards only. */
+export const listRoomCardsPublic = async () => {
+  return RoomShowcaseModel.find({ published: true }).sort({ sortOrder: 1 }).lean();
+};
+
+export const listRoomCardsAdmin = async () => {
+  return RoomShowcaseModel.find().sort({ sortOrder: 1 }).lean();
+};
+
+export const createRoomCard = async (body: Record<string, unknown>) => {
+  return RoomShowcaseModel.create(body);
+};
+
+export const updateRoomCard = async (id: string, body: Record<string, unknown>) => {
+  return RoomShowcaseModel.findByIdAndUpdate(id, { $set: body }, { returnDocument: "after" }).lean();
+};
+
+export const deleteRoomCard = async (id: string) => {
+  await RoomShowcaseModel.findByIdAndDelete(id);
+};
+
+/** Presidential Suite — singleton marketing block (separate API from room cards). */
+export const getPresidentialSuitePublic = async () => {
+  return PresidentialSuiteModel.findOne({ key: PRESIDENTIAL_KEY, published: true }).lean();
+};
+
+export const getPresidentialSuiteAdmin = async () => {
+  return PresidentialSuiteModel.findOne({ key: PRESIDENTIAL_KEY }).lean();
+};
+
+export const upsertPresidentialSuite = async (body: Record<string, unknown>) => {
+  const patch: Record<string, unknown> = {
+    key: PRESIDENTIAL_KEY,
+    headline: body.headline,
+    description: body.description,
+    images: Array.isArray(body.images) ? body.images : [],
+    published: body.published !== false,
+    bookHref: typeof body.bookHref === "string" ? body.bookHref : "/booking",
+    bookButtonLabel:
+      typeof body.bookButtonLabel === "string" && body.bookButtonLabel.trim() ?
+        body.bookButtonLabel.trim()
+      : "Book Now",
+    showPricing: body.showPricing === true,
+  };
+  if (typeof body.sizeLabel === "string") patch.sizeLabel = body.sizeLabel;
+  if (typeof body.startingPrice === "number") patch.startingPrice = body.startingPrice;
+  return PresidentialSuiteModel.findOneAndUpdate(
+    { key: PRESIDENTIAL_KEY },
+    { $set: patch },
+    { returnDocument: "after", upsert: true, setDefaultsOnInsert: true }
+  ).lean();
+};
+
+export const getSiteContentByKey = async (key: string) => {
+  return SiteContentModel.findOne({ key }).lean();
+};
+
+export const upsertSiteContent = async (body: Record<string, unknown>) => {
+  const key = String(body.key ?? "homepage");
+  const pickYourRoomTitle =
+    typeof body.pickYourRoomTitle === "string" ? body.pickYourRoomTitle : "";
+  const pickYourRoomIntro =
+    typeof body.pickYourRoomIntro === "string" ? body.pickYourRoomIntro : "";
+  const membershipIntro =
+    typeof body.membershipIntro === "string" ? body.membershipIntro : "";
+  const guestStoriesIntro =
+    typeof body.guestStoriesIntro === "string" ? body.guestStoriesIntro : "";
+  return SiteContentModel.findOneAndUpdate(
+    { key },
+    {
+      $set: {
+        key,
+        pickYourRoomTitle,
+        pickYourRoomIntro,
+        membershipIntro,
+        guestStoriesIntro,
+      },
+    },
+    { returnDocument: "after", upsert: true, setDefaultsOnInsert: true }
+  ).lean();
 };
