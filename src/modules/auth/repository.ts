@@ -1,13 +1,13 @@
 import type { UserRow } from "./repository.types.js";
-import { prisma } from "../../db/prisma.js";
+import { UserModel } from "../../models/User.js";
 
 export type { UserRow } from "./repository.types.js";
 
 export const findUserByEmail = async (email: string): Promise<UserRow | null> => {
-  const doc = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+  const doc = await UserModel.findOne({ email: email.toLowerCase() }).lean();
   if (!doc) return null;
   return {
-    id: doc.id,
+    id: String(doc._id),
     email: doc.email,
     password_hash: doc.passwordHash,
     role: doc.role,
@@ -16,10 +16,10 @@ export const findUserByEmail = async (email: string): Promise<UserRow | null> =>
 };
 
 export const findUserById = async (id: string): Promise<UserRow | null> => {
-  const doc = await prisma.user.findUnique({ where: { id } });
+  const doc = await UserModel.findById(id).lean();
   if (!doc) return null;
   return {
-    id: doc.id,
+    id: String(doc._id),
     email: doc.email,
     password_hash: doc.passwordHash,
     role: doc.role,
@@ -28,8 +28,8 @@ export const findUserById = async (id: string): Promise<UserRow | null> => {
 };
 
 export const updatePasswordByUserId = async (id: string, nextHash: string) => {
-  await prisma.user.update({
-    where: { id },
-    data: { passwordHash: nextHash, mustChangePassword: false },
+  await UserModel.findByIdAndUpdate(id, {
+    passwordHash: nextHash,
+    mustChangePassword: false,
   });
 };

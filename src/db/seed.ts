@@ -1,6 +1,9 @@
 import bcrypt from "bcrypt";
 import "dotenv/config";
-import { prisma } from "./prisma.js";
+import mongoose from "mongoose";
+import { env } from "../config/env.js";
+import { UserModel } from "../models/User.js";
+import { MembershipTierModel } from "../models/MembershipTier.js";
 
 const adminEmail = "info@edenwellnesshospitality.com";
 const adminPassword = "12345";
@@ -46,49 +49,35 @@ const defaultMembershipTiers = [
 ];
 
 const run = async () => {
-  await prisma.$connect();
+  await mongoose.connect(env.MONGODB_URI);
 
   const passwordHash = await bcrypt.hash(adminPassword, 12);
-  await prisma.user.upsert({
-    where: { email: adminEmail.toLowerCase() },
-    create: {
+  await UserModel.findOneAndUpdate(
+    { email: adminEmail.toLowerCase() },
+    {
       email: adminEmail.toLowerCase(),
       passwordHash,
       role: "admin",
       mustChangePassword: false,
     },
-    update: {
-      passwordHash,
-      role: "admin",
-      mustChangePassword: false,
-    },
-  });
+    { upsert: true, new: true }
+  );
   // eslint-disable-next-line no-console
   console.log(`Seeded admin user: ${adminEmail}`);
 
-  const count = await prisma.membershipTier.count();
+  const count = await MembershipTierModel.countDocuments();
   if (count === 0) {
-    await prisma.membershipTier.createMany({
-      data: defaultMembershipTiers.map((t) => ({
-        title: t.title,
-        description: t.description,
-        priceLabel: t.priceLabel,
-        features: t.features,
-        isPopular: t.isPopular,
-        sortOrder: t.sortOrder,
-        published: t.published,
-      })),
-    });
+    await MembershipTierModel.insertMany(defaultMembershipTiers);
     // eslint-disable-next-line no-console
     console.log("Seeded default membership tiers");
   }
 
-  await prisma.$disconnect();
+  await mongoose.disconnect();
 };
 
 run().catch(async (error) => {
   // eslint-disable-next-line no-console
   console.error(error);
-  await prisma.$disconnect().catch(() => undefined);
+  await mongoose.disconnect().catch(() => undefined);
   process.exit(1);
 });

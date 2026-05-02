@@ -31,16 +31,9 @@ export const galleryCategoryBodySchema = z.object({
   sortOrder: z.number().int().optional(),
 });
 
-const absoluteOrPublicPathUrl = z.string().refine(
-  (s) =>
-    /^https?:\/\//i.test(s) ||
-    (s.startsWith("/") && s.length > 1),
-  { message: "Must be an absolute http(s) URL or a root-relative path starting with /" }
-);
-
 export const galleryImageBodySchema = z.object({
   categoryId: z.string().min(1),
-  secureUrl: z.union([z.string().url(), absoluteOrPublicPathUrl]),
+  secureUrl: z.string().url(),
   publicId: z.string().min(1),
   alt: z.string().optional(),
   sortOrder: z.number().int().optional(),

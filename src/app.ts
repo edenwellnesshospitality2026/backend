@@ -1,11 +1,11 @@
-import path from "node:path";
 import "dotenv/config";
 import cors from "cors";
 import express from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
+import { v2 as cloudinary } from "cloudinary";
 import { corsOrigins, env } from "./config/env.js";
-import { isDatabaseConnected } from "./db/health.js";
+import { isMongoConnected } from "./db/mongo.js";
 import { errorHandler } from "./middlewares/error-handler.js";
 import { requireAuth, type AuthenticatedRequest } from "./middlewares/auth.js";
 import { validateBody } from "./middlewares/validate.js";
@@ -48,7 +48,11 @@ import {
   membershipTierBodySchema,
 } from "./modules/cms/schemas.js";
 import * as cms from "./modules/cms/repository.js";
-import { uploadImageDisk } from "./lib/upload.js";
+import { uploadMemory } from "./lib/upload.js";
+
+if (env.CLOUDINARY_URL) {
+  cloudinary.config();
+}
 
 export const createApp = () => {
   const app = express();
@@ -62,9 +66,6 @@ export const createApp = () => {
   );
   app.use(express.json({ limit: "1mb" }));
 
-  const uploadDirAbs = path.resolve(process.cwd(), env.UPLOAD_DIR);
-  app.use(env.FILES_PUBLIC_PREFIX, express.static(uploadDirAbs));
-
   const authLimiter = rateLimit({
     windowMs: env.AUTH_RATE_LIMIT_WINDOW_MS,
     max: env.AUTH_RATE_LIMIT_MAX,
@@ -77,13 +78,13 @@ export const createApp = () => {
     standardHeaders: true,
   });
 
-  app.get("/health", async (_req, res) => {
-    const dbConnected = await isDatabaseConnected();
+  app.get("/health", (_req, res) => {
+    const mongoConnected = isMongoConnected();
     res.json({
       ok: true,
       service: "eden-backend-service",
-      dbConnected,
-      database: dbConnected ? "mysql" : "mysql_pending",
+      mongoConnected,
+      database: mongoConnected ? "mongodb" : "mongodb_pending",
     });
   });
 
@@ -200,7 +201,7 @@ export const createApp = () => {
     validateBody(createContactEnquirySchema),
     async (req, res) => {
       const doc = await createContactEnquiry(req.body);
-      return res.status(201).json({ data: { id: doc.id } });
+      return res.status(201).json({ data: { id: String(doc._id) } });
     }
   );
 
@@ -229,7 +230,7 @@ export const createApp = () => {
     validateBody(createBookingEnquirySchema),
     async (req, res) => {
       const doc = await createBookingEnquiry(req.body);
-      return res.status(201).json({ data: { id: doc.id } });
+      return res.status(201).json({ data: { id: String(doc._id) } });
     }
   );
 
@@ -395,21 +396,25 @@ export const createApp = () => {
   app.post(
     "/api/uploads/image",
     requireAuth,
-    uploadImageDisk.single("file"),
+    uploadMemory.single("file"),
     async (req, res, next) => {
       try {
+        if (!env.CLOUDINARY_URL) {
+          return res.status(503).json({ error: "Cloudinary is not configured (set CLOUDINARY_URL)." });
+        }
         const file = req.file;
-        if (!file?.path) {
+        if (!file?.buffer) {
           return res.status(400).json({ error: "Missing multipart field \"file\"" });
         }
-        const relative = path.relative(uploadDirAbs, file.path).replace(/\\/g, "/");
-        const prefix = env.FILES_PUBLIC_PREFIX.replace(/\/$/, "");
-        const pathPart = `${prefix}/${relative}`;
-        const secureUrl = env.PUBLIC_SITE_URL
-          ? `${env.PUBLIC_SITE_URL.replace(/\/$/, "")}${pathPart}`
-          : pathPart;
+        const uploadResult = await new Promise<{ secure_url: string; public_id: string }>((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream({ folder: "eden" }, (err, result) => {
+            if (err || !result) reject(err ?? new Error("Upload failed"));
+            else resolve(result as { secure_url: string; public_id: string });
+          });
+          stream.end(file.buffer);
+        });
         return res.json({
-          data: { secureUrl, publicId: relative },
+          data: { secureUrl: uploadResult.secure_url, publicId: uploadResult.public_id },
         });
       } catch (e) {
         return next(e);

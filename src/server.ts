@@ -1,42 +1,35 @@
-import fs from "node:fs";
-import path from "node:path";
+import mongoose from "mongoose";
 import { createApp } from "./app.js";
 import { env } from "./config/env.js";
 import { logger } from "./config/logger.js";
-import { prisma } from "./db/prisma.js";
+import { connectMongo, disconnectMongo } from "./db/mongo.js";
 
-const ensureUploadDir = () => {
-  const dir = path.resolve(process.cwd(), env.UPLOAD_DIR);
-  fs.mkdirSync(dir, { recursive: true });
-};
-
-/** Keeps HTTP alive if MySQL is slow or unreachable — same strategy as former Mongo loop. */
-const runDbConnectionLoop = async () => {
-  while (true) {
+/** Keeps HTTP alive if Atlas is slow or unreachable — exiting on Mongo failure caused Hostinger 503s. */
+const runMongoConnectionLoop = async () => {
+  while (mongoose.connection.readyState !== 1) {
     try {
-      await prisma.$connect();
-      logger.info("MySQL ready — API routes can use the database");
+      await connectMongo(env.MONGODB_URI);
+      logger.info("MongoDB ready — API routes can use the database");
       return;
     } catch (err) {
-      logger.error({ err }, "MySQL connection failed; retrying in 15s (HTTP stays up)");
+      logger.error({ err }, "MongoDB connection failed; retrying in 15s (HTTP stays up)");
       await new Promise((r) => setTimeout(r, 15_000));
     }
   }
 };
 
 const start = async () => {
-  ensureUploadDir();
   const app = createApp();
 
   const server = app.listen(env.PORT, env.HOST, () => {
     logger.info(`eden-backend-service listening on http://${env.HOST}:${env.PORT}`);
   });
 
-  void runDbConnectionLoop();
+  void runMongoConnectionLoop();
 
   const shutdown = async () => {
     server.close(() => logger.info("HTTP server closed"));
-    await prisma.$disconnect().catch(() => undefined);
+    await disconnectMongo().catch(() => undefined);
     process.exit(0);
   };
 
