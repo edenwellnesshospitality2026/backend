@@ -139,7 +139,7 @@ export const updateRoomCard = async (id: string, body: Record<string, unknown>) 
       delete set[k];
     }
   }
-  const update: mongoose.UpdateQuery = {};
+  const update: mongoose.UpdateQuery<Record<string, unknown>> = {};
   if (Object.keys(set).length) update.$set = set;
   if (Object.keys(unset).length) update.$unset = unset;
   return RoomShowcaseModel.findByIdAndUpdate(id, update, { returnDocument: "after" }).lean();
@@ -182,7 +182,7 @@ export const upsertPresidentialSuite = async (body: Record<string, unknown>) => 
     else if (typeof v === "number") (patch as Record<string, unknown>)[k] = v;
   }
 
-  const update: mongoose.UpdateQuery = { $set: patch };
+  const update: mongoose.UpdateQuery<Record<string, unknown>> = { $set: patch };
   if (Object.keys(unset).length) update.$unset = unset;
 
   return PresidentialSuiteModel.findOneAndUpdate(
