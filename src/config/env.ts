@@ -1,8 +1,16 @@
 import { z } from "zod";
 
+/** PORT must match what the hosting reverse-proxy forwards to (Hostinger often injects PORT; if not, set it in the panel). */
+const portSchema = z.preprocess((v) => {
+  if (v == null || v === "") return 8090;
+  const n = Number(v);
+  return Number.isFinite(n) && n > 0 ? n : 8090;
+}, z.number().int().positive());
+
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
-  PORT: z.coerce.number().default(8090),
+  HOST: z.string().default("0.0.0.0"),
+  PORT: portSchema,
   MONGODB_URI: z.string().url(),
   CLOUDINARY_URL: z.string().optional(),
   CORS_ORIGINS: z.string().default("http://localhost:8080,http://localhost:8081"),
