@@ -52,6 +52,46 @@ const defaultMembershipTiers = [
   },
 ];
 
+const defaultCorporateViewUrl =
+  "https://drive.google.com/file/d/1Btg8mqTmasHuzdOOdrqXgWM_Ro3Y70VH/view";
+
+const seedHeroSlides = [
+  {
+    sortOrder: 0,
+    publicId: "seed/hero/0",
+    secureUrl:
+      "https://ik.imagekit.io/sxe8qsgazl/edenwellness/READY%20TO%20MOVE%20IN%20only%20FEW%20UNITS%20LEFT%20(3820%20x%202160%20px)%20(10).png",
+    title: "Ultimate Luxury Wellness & Hospitality Retreat",
+    subtitle: "in Dehradun Valley",
+    description: "Experience premium wellness and hospitality in the Himalayas.",
+  },
+  {
+    sortOrder: 1,
+    publicId: "seed/hero/1",
+    secureUrl: "https://ik.imagekit.io/sxe8qsgazl/edenwellness/6.png",
+    title: "Curated Wellness Living",
+    subtitle: "for mindful getaways",
+    description: "Stay in thoughtfully designed residences with curated amenities.",
+  },
+  {
+    sortOrder: 2,
+    publicId: "seed/hero/2",
+    secureUrl: "https://ik.imagekit.io/sxe8qsgazl/edenwellness/1.png",
+    title: "Premium Suites & Residences",
+    subtitle: "crafted for comfort",
+    description: "Choose from studio to grand suites tailored for every stay style.",
+  },
+  {
+    sortOrder: 3,
+    publicId: "seed/hero/3",
+    secureUrl:
+      "https://ik.imagekit.io/sxe8qsgazl/edenwellness/READY%20TO%20MOVE%20IN%20only%20FEW%20UNITS%20LEFT%20(3820%20x%202160%20px)%20(9).png",
+    title: "Where Nature Meets Hospitality",
+    subtitle: "in the lap of the hills",
+    description: "Wake up to valley views and elevate your retreat experience.",
+  },
+];
+
 const defaultHomepageSiteContent = {
   key: "homepage",
   pickYourRoomTitle: "Pick Your Room/Suite",
@@ -60,6 +100,9 @@ const defaultHomepageSiteContent = {
   membershipIntro:
     "Choose a membership that matches how you want to experience Eden—wellness getaways, signature stays, or our inner circle for the complete retreat lifestyle.",
   guestStoriesIntro: "",
+  heroSlides: seedHeroSlides,
+  corporateLinkUrl: defaultCorporateViewUrl,
+  corporateLinkVisible: true,
 };
 
 const defaultPresidentialSuite = {
@@ -320,6 +363,16 @@ const run = async () => {
   await SiteContentModel.updateOne(
     { key: "homepage", pickYourRoomTitle: { $exists: false } },
     { $set: { pickYourRoomTitle: "Pick Your Room/Suite" } }
+  );
+  await SiteContentModel.updateOne(
+    { key: "homepage", heroSlides: { $exists: false } },
+    {
+      $set: {
+        heroSlides: seedHeroSlides,
+        corporateLinkUrl: defaultCorporateViewUrl,
+        corporateLinkVisible: true,
+      },
+    }
   );
   // eslint-disable-next-line no-console
   console.log(`Ensured site content key: ${defaultHomepageSiteContent.key}`);

@@ -62,4 +62,21 @@ describe("siteContentBodySchema", () => {
     });
     expect(parsed.key).toBe("homepage");
   });
+
+  it("accepts hero slides and corporate fields", () => {
+    const parsed = siteContentBodySchema.parse({
+      key: "homepage",
+      corporateLinkUrl: "https://drive.google.com/file/d/abc/view",
+      corporateLinkVisible: false,
+      heroSlides: [
+        {
+          secureUrl: "https://example.com/x.png",
+          publicId: "cloud/1",
+          title: "Hello",
+        },
+      ],
+    });
+    expect(parsed.heroSlides).toHaveLength(1);
+    expect(parsed.corporateLinkVisible).toBe(false);
+  });
 });

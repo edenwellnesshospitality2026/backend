@@ -73,10 +73,23 @@ export const presidentialSuiteBodySchema = z.object({
   showPricing: z.boolean().optional(),
 });
 
+export const heroSlideBodySchema = z.object({
+  secureUrl: z.string().url(),
+  publicId: z.string().min(1),
+  alt: z.string().optional(),
+  title: z.string().optional(),
+  subtitle: z.string().optional(),
+  description: z.string().optional(),
+  sortOrder: z.number().int().optional(),
+});
+
 export const siteContentBodySchema = z.object({
   key: z.string().min(1),
   pickYourRoomTitle: z.string().optional(),
   pickYourRoomIntro: z.string().optional(),
   membershipIntro: z.string().optional(),
   guestStoriesIntro: z.string().optional(),
+  heroSlides: z.array(heroSlideBodySchema).optional(),
+  corporateLinkUrl: z.union([z.string().url(), z.literal("")]).optional(),
+  corporateLinkVisible: z.boolean().optional(),
 });

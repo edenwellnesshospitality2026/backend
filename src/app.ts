@@ -11,9 +11,10 @@ import { requireAuth, type AuthenticatedRequest } from "./middlewares/auth.js";
 import { validateBody } from "./middlewares/validate.js";
 import { bookingSchema } from "./modules/bookings/schema.js";
 import { createBooking, listBookings } from "./modules/bookings/repository.js";
-import { changePasswordSchema, loginSchema } from "./modules/auth/schema.js";
+import { changeEmailSchema, changePasswordSchema, loginSchema } from "./modules/auth/schema.js";
 import {
   authenticateUser,
+  changeEmail,
   changePassword,
   fetchAuthUser,
 } from "./modules/auth/service.js";
@@ -121,6 +122,33 @@ export const createApp = () => {
       const changed = await changePassword(req.auth!.userId, currentPassword, newPassword);
       if (!changed) return res.status(400).json({ error: "Current password is incorrect" });
       return res.json({ data: { changed: true } });
+    }
+  );
+
+  app.post(
+    "/api/auth/change-email",
+    authLimiter,
+    requireAuth,
+    validateBody(changeEmailSchema),
+    async (req: AuthenticatedRequest, res) => {
+      const { newEmail, currentPassword } = req.body as {
+        newEmail: string;
+        currentPassword: string;
+      };
+      const result = await changeEmail(req.auth!.userId, currentPassword, newEmail);
+      if (!result.ok) {
+        if (result.code === "not_found") return res.status(404).json({ error: "User not found" });
+        if (result.code === "email_taken") {
+          return res.status(400).json({ error: "That email is already in use" });
+        }
+        return res.status(400).json({ error: "Current password is incorrect" });
+      }
+      return res.json({
+        data: {
+          token: result.token,
+          user: result.user,
+        },
+      });
     }
   );
 
@@ -452,6 +480,9 @@ export const createApp = () => {
     res.status(204).send();
   });
 
+  const defaultCorporateViewUrl =
+    "https://drive.google.com/file/d/1Btg8mqTmasHuzdOOdrqXgWM_Ro3Y70VH/view";
+
   app.get("/api/cms/site-content", async (req, res) => {
     const key = typeof req.query.key === "string" && req.query.key ? req.query.key : "homepage";
     const doc = await cms.getSiteContentByKey(key);
@@ -464,6 +495,9 @@ export const createApp = () => {
           pickYourRoomIntro: "",
           membershipIntro: "",
           guestStoriesIntro: "",
+          heroSlides: [],
+          corporateLinkUrl: defaultCorporateViewUrl,
+          corporateLinkVisible: true,
         } as const),
     });
   });

@@ -33,3 +33,21 @@ export const updatePasswordByUserId = async (id: string, nextHash: string) => {
     mustChangePassword: false,
   });
 };
+
+export const updateEmailByUserId = async (id: string, emailLower: string) => {
+  await UserModel.findByIdAndUpdate(id, { email: emailLower });
+};
+
+/** True if another user already owns this email (case-insensitive). */
+export const isEmailTakenByOtherUser = async (
+  emailLower: string,
+  excludeUserId: string
+): Promise<boolean> => {
+  const doc = await UserModel.findOne({
+    email: emailLower,
+    _id: { $ne: excludeUserId },
+  })
+    .select("_id")
+    .lean();
+  return Boolean(doc);
+};

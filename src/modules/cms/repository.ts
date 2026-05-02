@@ -178,17 +178,28 @@ export const upsertSiteContent = async (body: Record<string, unknown>) => {
     typeof body.membershipIntro === "string" ? body.membershipIntro : "";
   const guestStoriesIntro =
     typeof body.guestStoriesIntro === "string" ? body.guestStoriesIntro : "";
+
+  const setDoc: Record<string, unknown> = {
+    key,
+    pickYourRoomTitle,
+    pickYourRoomIntro,
+    membershipIntro,
+    guestStoriesIntro,
+  };
+
+  if (Array.isArray(body.heroSlides)) {
+    setDoc.heroSlides = body.heroSlides;
+  }
+  if (typeof body.corporateLinkUrl === "string") {
+    setDoc.corporateLinkUrl = body.corporateLinkUrl;
+  }
+  if (typeof body.corporateLinkVisible === "boolean") {
+    setDoc.corporateLinkVisible = body.corporateLinkVisible;
+  }
+
   return SiteContentModel.findOneAndUpdate(
     { key },
-    {
-      $set: {
-        key,
-        pickYourRoomTitle,
-        pickYourRoomIntro,
-        membershipIntro,
-        guestStoriesIntro,
-      },
-    },
+    { $set: setDoc },
     { returnDocument: "after", upsert: true, setDefaultsOnInsert: true }
   ).lean();
 };
