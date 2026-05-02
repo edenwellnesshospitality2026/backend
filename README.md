@@ -2,12 +2,12 @@
 
 Production-ready backend service for:
 - Authenticated operations panel APIs (custom JWT login with email/password)
-- Listings + rate plans + inventory management
-- Booking submission and storage in PostgreSQL
+- Listings + rate plans + inventory management (MongoDB)
+- Bookings, contact/booking enquiries, CMS (memberships, guest stories, gallery), Cloudinary uploads
 
 ## Stack
 - Node.js + Express + TypeScript
-- PostgreSQL (`pg`)
+- MongoDB (Mongoose)
 - JWT auth (`jsonwebtoken`) + hashed passwords (`bcrypt`)
 - Validation (`zod`)
 - Security middleware (`helmet`, `express-rate-limit`)
@@ -18,8 +18,8 @@ Production-ready backend service for:
 
 ```bash
 cp .env.example .env
+# Set MONGODB_URI (with database name). Optionally CLOUDINARY_URL for image uploads.
 npm install
-npm run db:migrate
 npm run db:seed
 npm run dev
 ```
@@ -31,13 +31,14 @@ Service runs on `http://localhost:8090`.
 - Email: `info@edenwellnesshospitality.com`
 - Initial password: `12345`
 
-Password is stored only as a bcrypt hash in the database. Change it immediately from dashboard/API after first login.
+Password is stored only as a bcrypt hash in MongoDB. Change it immediately from dashboard/API after first login.
 
 ## Environment Variables
 
 - `NODE_ENV` (`development` | `test` | `production`)
 - `PORT` (default `8090`)
-- `DATABASE_URL` (PostgreSQL connection string)
+- `MONGODB_URI` (MongoDB connection string; include database name, e.g. `...mongodb.net/eden?...`)
+- `CLOUDINARY_URL` (optional; required for `POST /api/uploads/image`)
 - `JWT_SECRET` (min 16 chars, strong random secret)
 - `JWT_EXPIRES_IN` (default `12h`)
 - `CORS_ORIGINS` (comma-separated allowed origins)
@@ -46,8 +47,8 @@ Password is stored only as a bcrypt hash in the database. Change it immediately 
 
 ## Database Commands
 
-- `npm run db:migrate`: applies SQL migrations in `src/db/migrations`
-- `npm run db:seed`: creates/updates default admin user
+- `npm run db:migrate`: informational only (MongoDB uses Mongoose models; no SQL migrations)
+- `npm run db:seed`: upserts default admin user and seeds membership tiers if empty
 
 ## API Endpoints
 
@@ -68,7 +69,29 @@ Password is stored only as a bcrypt hash in the database. Change it immediately 
 - `DELETE /api/listings/:id` (auth required)
 
 ### Bookings
-- `POST /api/bookings`
+- `POST /api/bookings` (public submission)
+- `GET /api/bookings` (Bearer — dashboard list)
+
+### Enquiries
+- `POST /api/contact-enquiries` (rate-limited)
+- `GET /api/contact-enquiries` (Bearer)
+- `PATCH /api/contact-enquiries/:id` (Bearer — status)
+- `POST /api/booking-enquiries` (rate-limited)
+- `GET /api/booking-enquiries` (Bearer)
+- `PATCH /api/booking-enquiries/:id` (Bearer — status)
+
+### CMS (public read where noted)
+- `GET /api/cms/membership-tiers` — published tiers
+- `GET /api/cms/membership-tiers/manage` (Bearer) — all tiers
+- `POST|PUT|DELETE /api/cms/membership-tiers` (+ `:id` for update/delete) — Bearer
+- `GET /api/cms/guest-stories` — published stories
+- `GET /api/cms/guest-stories/manage` (Bearer)
+- `POST|PUT|DELETE /api/cms/guest-stories` (+ `:id`) — Bearer
+- `GET /api/cms/gallery` — categories with images (published images only)
+- Category/image CRUD under `/api/cms/gallery/categories` and `/api/cms/gallery/images` — Bearer (see `app.ts`)
+
+### Uploads
+- `POST /api/uploads/image` (Bearer, multipart field `file`; requires `CLOUDINARY_URL`)
 
 ## Quality Commands
 
@@ -85,7 +108,7 @@ Password is stored only as a bcrypt hash in the database. Change it immediately 
    - `docker compose up -d --build`
 5. Configure reverse proxy using `deploy/nginx.conf`.
 6. Install TLS cert with Let’s Encrypt (`certbot --nginx`).
-7. Configure automated PostgreSQL backups (daily, retention >= 7 days).
+7. Configure automated MongoDB Atlas backups (or self-hosted backups).
 
 ## GitHub Auto-Deploy Pipeline (Hostinger)
 
@@ -124,6 +147,6 @@ On every push to `main`, GitHub Actions will:
 
 ### 4) Recommended next hardening
 
-- Move database migrations into deploy step (`npm run db:migrate`) using a one-off container or job container.
+- Run `npm run db:seed` once after deploy if a fresh database needs the admin user.
 - Add health-check and rollback script if `docker compose up` fails.
 - Use a least-privilege deploy user instead of root.

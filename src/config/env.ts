@@ -3,7 +3,8 @@ import { z } from "zod";
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().default(8090),
-  DATABASE_URL: z.string().url(),
+  MONGODB_URI: z.string().url(),
+  CLOUDINARY_URL: z.string().optional(),
   CORS_ORIGINS: z.string().default("http://localhost:8080,http://localhost:8081"),
   JWT_SECRET: z.string().min(16, "JWT_SECRET must be at least 16 chars."),
   JWT_EXPIRES_IN: z.string().default("12h"),

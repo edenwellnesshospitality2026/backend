@@ -1,38 +1,35 @@
-import { pool } from "../../db/pool.js";
+import type { UserRow } from "./repository.types.js";
+import { UserModel } from "../../models/User.js";
 
-export interface UserRow {
-  id: string;
-  email: string;
-  password_hash: string;
-  role: string;
-  must_change_password: boolean;
-}
+export type { UserRow } from "./repository.types.js";
 
 export const findUserByEmail = async (email: string): Promise<UserRow | null> => {
-  const result = await pool.query<UserRow>(
-    `SELECT id, email, password_hash, role, must_change_password
-     FROM users
-     WHERE email = $1`,
-    [email]
-  );
-  return result.rows[0] ?? null;
+  const doc = await UserModel.findOne({ email: email.toLowerCase() }).lean();
+  if (!doc) return null;
+  return {
+    id: String(doc._id),
+    email: doc.email,
+    password_hash: doc.passwordHash,
+    role: doc.role,
+    must_change_password: doc.mustChangePassword,
+  };
 };
 
 export const findUserById = async (id: string): Promise<UserRow | null> => {
-  const result = await pool.query<UserRow>(
-    `SELECT id, email, password_hash, role, must_change_password
-     FROM users
-     WHERE id = $1`,
-    [id]
-  );
-  return result.rows[0] ?? null;
+  const doc = await UserModel.findById(id).lean();
+  if (!doc) return null;
+  return {
+    id: String(doc._id),
+    email: doc.email,
+    password_hash: doc.passwordHash,
+    role: doc.role,
+    must_change_password: doc.mustChangePassword,
+  };
 };
 
 export const updatePasswordByUserId = async (id: string, nextHash: string) => {
-  await pool.query(
-    `UPDATE users
-     SET password_hash = $2, must_change_password = false, updated_at = NOW()
-     WHERE id = $1`,
-    [id, nextHash]
-  );
+  await UserModel.findByIdAndUpdate(id, {
+    passwordHash: nextHash,
+    mustChangePassword: false,
+  });
 };

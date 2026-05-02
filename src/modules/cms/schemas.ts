@@ -1,0 +1,41 @@
+import { z } from "zod";
+
+export const membershipTierBodySchema = z.object({
+  title: z.string().min(1),
+  description: z.string().min(1),
+  priceLabel: z.string().optional(),
+  features: z.array(z.string()).default([]),
+  isPopular: z.boolean().optional(),
+  primaryCtaLabel: z.string().optional(),
+  primaryCtaHref: z.string().optional(),
+  secondaryCtaLabel: z.string().optional(),
+  secondaryCtaHref: z.string().optional(),
+  sortOrder: z.number().int().optional(),
+  published: z.boolean().optional(),
+});
+
+export const guestStoryBodySchema = z.object({
+  headline: z.string().min(1),
+  subtitle: z.string().optional(),
+  youtubeUrl: z.string().url(),
+  body: z.string().optional(),
+  rating: z.number().int().min(1).max(5).optional(),
+  sideText: z.string().optional(),
+  sortOrder: z.number().int().optional(),
+  published: z.boolean().optional(),
+});
+
+export const galleryCategoryBodySchema = z.object({
+  title: z.string().min(1),
+  slug: z.string().min(1),
+  sortOrder: z.number().int().optional(),
+});
+
+export const galleryImageBodySchema = z.object({
+  categoryId: z.string().min(1),
+  secureUrl: z.string().url(),
+  publicId: z.string().min(1),
+  alt: z.string().optional(),
+  sortOrder: z.number().int().optional(),
+  published: z.boolean().optional(),
+});
